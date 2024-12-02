@@ -49,17 +49,13 @@ defmodule AdventOfCode.Day02 do
 
   @spec tolerable_safe_report?(list(integer())) :: boolean()
   defp tolerable_safe_report?(report) do
-    if safe_report?(report, 0) do
-      true
-    else
-      permutations = length(report)
+    permutations = length(report)
 
-      0..(permutations - 1)
-      |> Enum.map(fn i ->
-        {_, removed} = List.pop_at(report, i)
-        removed
-      end)
-      |> Enum.any?(fn report -> safe_report?(report, 0) end)
-    end
+    0..(permutations - 1)
+    |> Enum.reduce([report], fn i, acc ->
+      {_, removed} = List.pop_at(report, i)
+      acc ++ [removed]
+    end)
+    |> Enum.any?(fn report -> safe_report?(report, 0) end)
   end
 end

@@ -53,6 +53,8 @@ defmodule AdventOfCode.Day02 do
 
     0..(permutations - 1)
     |> Enum.reduce([report], fn i, acc ->
+      # Yes this is terrible in Erlang/Elixir. But these lists are provably
+      # very small, like no more than 20 items max. So who cares.
       {_, removed} = List.pop_at(report, i)
       acc ++ [removed]
     end)

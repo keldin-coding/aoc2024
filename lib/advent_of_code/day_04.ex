@@ -2,20 +2,19 @@ defmodule AdventOfCode.Day04 do
   @forward_next_letter %{"X" => "M", "M" => "A", "A" => "S", "S" => nil}
   @backward_next_letter %{"S" => "A", "A" => "M", "M" => "X", "X" => nil}
 
+  import Coordinates
+
   def part1(input) do
-    full_search = split_up_into_indexed_maps(input)
+    full_search =
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.split(&1, "", trim: true))
+      |> Coordinates.to_grid()
 
-    row_nums = 0..(length(Map.keys(full_search)) - 1)
-    col_nums = 0..(length(Map.keys(full_search[0])) - 1)
-
-    coordinates =
-      row_nums
-      |> Enum.map(fn row_num -> Enum.map(col_nums, &{row_num, &1}) end)
-      |> List.flatten()
-
-    coordinates
-    |> Enum.reduce(0, fn {row, col} = coord, sum ->
-      letter = full_search[row][col]
+    full_search[:grid]
+    |> Map.keys()
+    |> Enum.reduce(0, fn coord, sum ->
+      letter = full_search[:grid][coord]
 
       case letter do
         "X" ->
@@ -37,27 +36,29 @@ defmodule AdventOfCode.Day04 do
   end
 
   def part2(input) do
-    full_search = split_up_into_indexed_maps(input)
-
-    row_nums = 0..(length(Map.keys(full_search)) - 1)
-    col_nums = 0..(length(Map.keys(full_search[0])) - 1)
+    full_search_data =
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.split(&1, "", trim: true))
+      |> Coordinates.to_grid()
 
     matches_mas? = fn pair -> pair == {"M", "S"} or pair == {"S", "M"} end
 
-    coordinates =
-      row_nums
-      |> Enum.map(fn row_num -> Enum.map(col_nums, &{row_num, &1}) end)
-      |> List.flatten()
+    full_search = full_search_data[:grid]
 
-    coordinates
-    |> Enum.reduce(0, fn {row, col} = {row, col}, sum ->
-      letter = full_search[row][col]
+    full_search
+    |> Map.keys()
+    |> Enum.reduce(0, fn coords, sum ->
+      letter = full_search[coords]
 
       if letter != "A" do
         sum
       else
-        diag_down_letters = {full_search[row - 1][col - 1], full_search[row + 1][col + 1]}
-        diag_up_letters = {full_search[row + 1][col - 1], full_search[row - 1][col + 1]}
+        diag_down_letters =
+          {full_search[move_left(move_up(coords))], full_search[move_right(move_down(coords))]}
+
+        diag_up_letters =
+          {full_search[move_left(move_down(coords))], full_search[move_right(move_up(coords))]}
 
         sum +
           if(matches_mas?.(diag_down_letters) and matches_mas?.(diag_up_letters), do: 1, else: 0)
@@ -65,146 +66,124 @@ defmodule AdventOfCode.Day04 do
     end)
   end
 
-  defp split_up_into_indexed_maps(input) do
-    input
-    |> String.split("\n", trim: true)
-    |> Enum.map(&String.split(&1, "", trim: true))
-    |> AdventOfCode.list_of_lists_to_indexed_maps()
-  end
-
   # current_pos is a two item tuple {row, col}
-  defp check_horizontal_forwards?(word_search, {row, col}, count) do
-    if col >= length(Map.keys(word_search[row])) do
+  defp check_horizontal_forwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @forward_next_letter[current_letter]
-
-      # IO.inspect({row, col})
+      next_coord = move_right(coord)
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row][col + 1] == next_required and
-           check_horizontal_forwards?(word_search, {row, col + 1}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_horizontal_forwards?(search_data, next_coord, count + 1))
     end
   end
 
-  defp check_horizontal_backwards?(word_search, {row, col}, count) do
-    if col >= length(Map.keys(word_search[row])) do
+  defp check_horizontal_backwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @backward_next_letter[current_letter]
-
-      # IO.puts("Current: #{current_letter}, expected #{next_required}, count: #{count}")
-      # IO.inspect({row, col})
+      next_coord = move_right(coord)
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row][col + 1] == next_required and
-           check_horizontal_backwards?(word_search, {row, col + 1}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_horizontal_backwards?(search_data, next_coord, count + 1))
     end
   end
 
-  defp check_vertical_forwards?(word_search, {row, col}, count) do
-    if row >= length(Map.keys(word_search)) do
+  defp check_vertical_forwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @forward_next_letter[current_letter]
-
-      # IO.puts("Current: #{current_letter}, expected #{next_required}, count: #{count}")
-
-      # IO.inspect({row, col})
+      next_coord = move_down(coord)
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row + 1][col] == next_required and
-           check_vertical_forwards?(word_search, {row + 1, col}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_vertical_forwards?(search_data, next_coord, count + 1))
     end
   end
 
-  defp check_vertical_backwards?(word_search, {row, col}, count) do
-    if row >= length(Map.keys(word_search)) do
+  defp check_vertical_backwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @backward_next_letter[current_letter]
-
-      # IO.puts("Current: #{current_letter}, expected #{next_required}, count: #{count}")
-
-      # IO.inspect({row, col})
+      next_coord = move_down(coord)
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row + 1][col] == next_required and
-           check_vertical_backwards?(word_search, {row + 1, col}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_vertical_backwards?(search_data, next_coord, count + 1))
     end
   end
 
-  defp check_diagonal_up_forwards?(word_search, {row, col}, count) do
-    if row < 0 or col >= length(Map.keys(word_search[row])) do
+  defp check_diagonal_up_forwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @forward_next_letter[current_letter]
-
-      # IO.puts("Current: #{current_letter}, expected #{next_required}, count: #{count}")
-
-      # IO.inspect({row, col})
+      next_coord = coord |> move_up() |> move_right()
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row - 1][col + 1] == next_required and
-           check_diagonal_up_forwards?(word_search, {row - 1, col + 1}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_diagonal_up_forwards?(search_data, next_coord, count + 1))
     end
   end
 
-  defp check_diagonal_down_forwards?(word_search, {row, col}, count) do
-    if row >= length(Map.keys(word_search)) or col >= length(Map.keys(word_search[row])) do
+  defp check_diagonal_down_forwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @forward_next_letter[current_letter]
-
-      # IO.puts("Current: #{current_letter}, expected #{next_required}, count: #{count}")
-
-      # IO.inspect({row, col})
+      next_coord = coord |> move_down() |> move_right()
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row + 1][col + 1] == next_required and
-           check_diagonal_down_forwards?(word_search, {row + 1, col + 1}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_diagonal_down_forwards?(search_data, next_coord, count + 1))
     end
   end
 
-  defp check_diagonal_up_backwards?(word_search, {row, col}, count) do
-    if row < 0 or row >= length(Map.keys(word_search)) or
-         col >= length(Map.keys(word_search[row])) do
+  defp check_diagonal_up_backwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @backward_next_letter[current_letter]
-
-      # IO.puts("Current: #{current_letter}, expected #{next_required}, count: #{count}")
-
-      # IO.inspect({row, col})
+      next_coord = coord |> move_up() |> move_right()
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row - 1][col + 1] == next_required and
-           check_diagonal_up_backwards?(word_search, {row - 1, col + 1}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_diagonal_up_backwards?(search_data, next_coord, count + 1))
     end
   end
 
-  defp check_diagonal_down_backwards?(word_search, {row, col}, count) do
-    if row < 0 or row >= length(Map.keys(word_search)) or
-         col >= length(Map.keys(word_search[row])) do
+  defp check_diagonal_down_backwards?(%{grid: word_search} = search_data, coord, count) do
+    current_letter = word_search[coord]
+
+    if is_nil(current_letter) do
       false
     else
-      current_letter = word_search[row][col]
       next_required = @backward_next_letter[current_letter]
-
-      # IO.puts("Current: #{current_letter}, expected #{next_required}, count: #{count}")
-
-      # IO.inspect({row, col})
+      next_coord = coord |> move_down() |> move_right()
 
       (is_nil(next_required) and count == 4) or
-        (word_search[row + 1][col + 1] == next_required and
-           check_diagonal_down_backwards?(word_search, {row + 1, col + 1}, count + 1))
+        (word_search[next_coord] == next_required and
+           check_diagonal_down_backwards?(search_data, next_coord, count + 1))
     end
   end
 end

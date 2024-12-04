@@ -9,18 +9,23 @@ defmodule Coordinates do
   """
   @spec to_grid(list(list(any()))) :: %{{integer(), integer()} => any()}
   def to_grid([h | _] = lists) when is_list(h) do
-    lists
-    |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {data, row_num}, outer_acc ->
-      row_data =
-        data
-        |> Enum.with_index()
-        |> Enum.reduce(%{}, fn {item, col_num}, acc ->
-          Map.put(acc, {col_num, row_num}, item)
-        end)
+    grid =
+      lists
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {data, row_num}, outer_acc ->
+        row_data =
+          data
+          |> Enum.with_index()
+          |> Enum.reduce(%{}, fn {item, col_num}, acc ->
+            Map.put(acc, {col_num, row_num}, item)
+          end)
 
-      Map.merge(outer_acc, row_data)
-    end)
+        Map.merge(outer_acc, row_data)
+      end)
+
+    {width, height} = grid |> Map.keys() |> Enum.max()
+
+    %{max_width: width + 1, max_height: height + 1, grid: grid}
   end
 
   @spec move_up({integer(), integer()}) :: {integer(), integer()}

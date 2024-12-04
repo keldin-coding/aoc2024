@@ -11,15 +11,19 @@ defmodule CoordinatesTest do
     ]
 
     expected_map = %{
-      {0, 0} => "a",
-      {1, 0} => "b",
-      {2, 0} => "c",
-      {0, 1} => "d",
-      {1, 1} => "e",
-      {2, 1} => "f",
-      {0, 2} => "g",
-      {1, 2} => "h",
-      {2, 2} => "i"
+      grid: %{
+        {0, 0} => "a",
+        {1, 0} => "b",
+        {2, 0} => "c",
+        {0, 1} => "d",
+        {1, 1} => "e",
+        {2, 1} => "f",
+        {0, 2} => "g",
+        {1, 2} => "h",
+        {2, 2} => "i"
+      },
+      max_width: 3,
+      max_height: 3
     }
 
     assert expected_map == to_grid(input)

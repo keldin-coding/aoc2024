@@ -44,12 +44,18 @@ defmodule AdventOfCode.Day06 do
         end
       end)
 
+    # {:ok, results_gatherer} = ResultsGatherer.start_link()
+
     possible_new_grids
-    |> Enum.count(fn {_, obstructed_grid} ->
-      walk_robot_watch_for_cycles(obstructed_grid, starting_point, :up, 0, %{
-        starting_point => [0]
-      })
+    |> Enum.map(fn {_, obstructed_grid} ->
+      Task.async(fn ->
+        walk_robot_watch_for_cycles(obstructed_grid, starting_point, :up, 0, %{
+          starting_point => [0]
+        })
+      end)
     end)
+    |> Task.await_many(10_000)
+    |> Enum.count(& &1)
   end
 
   defp walk_robot_watch_for_cycles(

@@ -30,8 +30,80 @@ defmodule AdventOfCode.Day06 do
 
     grid = data[:grid]
 
-    nil
-    # possible_new_grids =
+    # Find where our robot is starting out
+    starting_point = Enum.find(Map.keys(grid), &(grid[&1] == "^"))
+
+    possible_new_grids =
+      Enum.reduce(Map.keys(grid), [], fn key, acc ->
+        if grid[key] == "#" or grid[key] == "^" do
+          acc
+        else
+          new_grid = Map.put(grid, key, "#")
+
+          [{key, new_grid} | acc]
+        end
+      end)
+
+    possible_new_grids
+    |> Enum.count(fn {_, obstructed_grid} ->
+      walk_robot_watch_for_cycles(obstructed_grid, starting_point, :up, 0, %{
+        starting_point => [0]
+      })
+    end)
+  end
+
+  defp walk_robot_watch_for_cycles(
+         grid,
+         current_position,
+         direction,
+         move_count,
+         last_hit_for_position
+       ) do
+    next = next_position(current_position, direction)
+
+    cond do
+      grid[next] == "#" ->
+        walk_robot_watch_for_cycles(
+          grid,
+          current_position,
+          @right_turns[direction],
+          move_count,
+          last_hit_for_position
+        )
+
+      # We've walked off the grid and are done
+      !Map.has_key?(grid, next) ->
+        false
+
+      true ->
+        move_count = move_count + 1
+
+        move_ids = Map.get(last_hit_for_position, next, [])
+        move_ids = [move_count | move_ids]
+
+        # We are being very cautious and requiring walking 2 loops minimum
+        if length(move_ids) < 3 do
+          walk_robot_watch_for_cycles(
+            grid,
+            next,
+            direction,
+            move_count,
+            Map.put(last_hit_for_position, next, move_ids)
+          )
+        else
+          [this_time, last_time, older_time | _] = move_ids
+
+          # Same number of steps to get here twice
+          this_time - last_time == last_time - older_time or
+            walk_robot_watch_for_cycles(
+              grid,
+              next,
+              direction,
+              move_count,
+              Map.put(last_hit_for_position, next, move_ids)
+            )
+        end
+    end
   end
 
   defp walk_robot_right_turns(grid, current_position, direction, stepped_on) do

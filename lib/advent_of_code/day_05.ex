@@ -29,7 +29,7 @@ defmodule AdventOfCode.Day05 do
       midpoint = Integer.floor_div(length(pages), 2)
       Enum.at(pages, midpoint)
     end)
-    |> Enum.reduce(0, &(&1 + &2))
+    |> Enum.sum()
   end
 
   defp determine_order_requirements(pages, {required_to_target, target_to_required}) do
@@ -97,13 +97,11 @@ defmodule AdventOfCode.Day05 do
     {{required_to_targets, target_to_required}, update_reqs}
   end
 
-  @doc """
-  A given page number is valid IFF:
-    * It is not in a pair of predecessor|target, OR
-    * only one half of the pair appears, OR
-    * Any numbers previously seen are either unmatched or appear before it in its pair, OR
-    * No numbers previously seen are on the right hand side of the pair
-  """
+  # A given page number is valid IFF:
+  #   * It is not in a pair of predecessor|target, OR
+  #   * only one half of the pair appears, OR
+  #   * Any numbers previously seen are either unmatched or appear before it in its pair, OR
+  #   * No numbers previously seen are on the right hand side of the pair
   defp required_page_orders?([], _, _), do: true
 
   defp required_page_orders?(

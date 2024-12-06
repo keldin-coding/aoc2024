@@ -58,6 +58,9 @@ defmodule AdventOfCode.Day06 do
     |> Enum.count(& &1)
   end
 
+  # I tried to pattern match on this by passing next in and removing the "!Map.has_key?"
+  # to a guard clause. It didn't work and I don't care enough right now to figure out
+  # what I did wrong with that approach.
   defp walk_robot_watch_for_cycles(
          grid,
          current_position,

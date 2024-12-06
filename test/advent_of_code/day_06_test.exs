@@ -23,7 +23,6 @@ defmodule AdventOfCode.Day06Test do
     assert 41 == result
   end
 
-  @tag :skip
   test "part2" do
     input = """
     ....#.....

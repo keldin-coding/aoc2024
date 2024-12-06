@@ -7,7 +7,11 @@ defmodule Coordinates do
   DOWN the grid, pixel style.
   Do not use if your origin is elsewhere.
   """
-  @spec to_grid(list(list(any()))) :: %{{integer(), integer()} => any()}
+  @spec to_grid(list(list(any()))) :: %{
+          grid: %{{integer(), integer()} => any()},
+          width: integer(),
+          height: integer()
+        }
   def to_grid([h | _] = lists) when is_list(h) do
     grid =
       lists

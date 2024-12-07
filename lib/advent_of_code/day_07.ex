@@ -1,5 +1,4 @@
 defmodule AdventOfCode.Day07 do
-  # 873610404290 is too low
   def part1(input) do
     input
     |> create_values_map()
@@ -17,7 +16,6 @@ defmodule AdventOfCode.Day07 do
     |> Enum.reduce(0, fn {v, _}, acc -> acc + v end)
   end
 
-  # 29229114137295 too low
   def part2(input) do
     input
     |> create_values_map()

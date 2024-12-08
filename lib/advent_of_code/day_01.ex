@@ -14,11 +14,7 @@ defmodule AdventOfCode.Day01 do
   def part2(input) do
     {list_1, list_2} = process(input)
 
-    list2_counts =
-      Enum.reduce(list_2, %{}, fn num, acc ->
-        val = Map.get(acc, num, 0)
-        Map.put(acc, num, val + 1)
-      end)
+    list2_counts = Enum.frequencies(list_2)
 
     list_1
     |> Enum.reduce(0, fn i, sum ->

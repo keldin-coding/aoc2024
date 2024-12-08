@@ -66,6 +66,7 @@ defmodule AdventOfCode.Day07Test do
 
     result = part2(input)
 
+    # 11387 from example + 4455 of added case
     assert 15842 == result
   end
 end

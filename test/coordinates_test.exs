@@ -44,4 +44,9 @@ defmodule CoordinatesTest do
   test "move_right/1" do
     assert {6, 5} == move_right({5, 5})
   end
+
+  test "move/2" do
+    assert {12, 15} == move({5, 5}, {7, 10})
+    assert {3, 3} == move({5, 5}, {-2, -2})
+  end
 end

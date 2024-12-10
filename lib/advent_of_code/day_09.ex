@@ -39,57 +39,42 @@ defmodule AdventOfCode.Day09 do
     |> :array.to_list()
   end
 
-  defp defragment_in_chunks([], defragmented_filemap), do: defragmented_filemap
+  # Should be []
+  defp defragment_in_chunks(_, defragmented_filemap), do: defragmented_filemap
 
-  # defp defragment_in_chunks([{to_move_id, how_big_is_file} | rest], defragged) do
-  #   valid_slot = find_given_id(defragged, how_big_is_file)
+  defp defragment_in_chunks([{to_move_id, how_big_is_file} | rest], defragged) do
+    current_slot =
+      find_given_id(defragged, how_big_is_file, to_move_id, :array.size(defragged) - 1)
 
-  #   if !valid_slot do
-  #     defragment_in_chunks(rest, defragged)
-  #   else
-  #     defragged = move_data(defragged, valid_slot, {to_move_id, how_big_is_file})
+    valid_slot = find_given_id(defragged, how_big_is_file, -1, current_slot)
 
-  #     defragment_in_chunks(rest, defragged)
-  #   end
+    if !valid_slot do
+      defragment_in_chunks(rest, defragged)
+    else
+      defragged = move_data(defragged, valid_slot, current_slot)
 
-  #   # Everything is smaller than it
-  #   if Enum.empty?(second_half) do
-  #     defragment_in_chunks(rest, defragged)
-  #   else
-  #     [{_, size} | rest_of_second_half] = second_half
-
-  #     if size == how_big_is_file do
-  #       defragment_in_chunks(
-  #         rest,
-  #         first_half ++ [{to_move_id, how_big_is_file} | rest_of_second_half]
-  #       )
-  #     else
-  #       defragment_in_chunks(
-  #         rest,
-  #         first_half ++
-  #           [{to_move_id, how_big_is_file}, {-1, size - how_big_is_file} | rest_of_second_half]
-  #       )
-  #     end
-  #   end
-  # end
-
-  defp move_data(defragged, index, {id, size}) do
-    location_of_data_to_move = find_given_id(defragged, size, id)
-
-    right_hand_side =
-      if location_of_data_to_move == :array.size(defragged) - 1,
-        do: nil,
-        else: location_of_data_to_move + 1
-
-    left_hand_side = location_of_data_to_move - 1
-
-    {l, l_size} = :array.get(left_hand_side, defragged)
+      defragment_in_chunks(rest, defragged)
+    end
   end
 
-  defp find_given_id(defragged, goal_size, given_id \\ -1) do
-    limit = :array.size(defragged) - 1
+  defp move_data(defragged, index_to_replace, index_to_move) do
+    # r_index = index_to_move + 1
+    # l_index = index_to_move - 1
 
-    Enum.find(0..limit, fn i ->
+    # {l_data, l_size} = :array.get(l_index, defragged)
+
+    # defragged = if l_data == -1 do
+
+    # else
+    #   defragged
+    # end
+  end
+
+  defp find_given_id(_, _, _, before_index) when before_index == 0, do: nil
+
+  # this is the worst named function on earth
+  defp find_given_id(defragged, goal_size, given_id, before_index) do
+    Enum.find(0..(before_index - 1), fn i ->
       {id, size} = :array.get(i, defragged)
 
       id == given_id and size >= goal_size

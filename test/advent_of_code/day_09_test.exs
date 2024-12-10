@@ -61,9 +61,9 @@ defmodule AdventOfCode.Day09Test do
 
   @tag :day9
   test "part2" do
-    input = nil
+    input = "2333133121414131402"
     result = part2(input)
 
-    assert result
+    assert 2858 == result
   end
 end

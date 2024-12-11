@@ -28,29 +28,65 @@ defmodule AdventOfCode.Day11 do
       |> String.split(" ", trim: true)
       |> Enum.map(&String.to_integer/1)
 
-    blink(%{stones: original_stones, count: length(original_stones)}, num_times)
-  end
-
-  defp blink(%{count: count}, 0), do: count
-
-  defp blink(%{stones: stones, count: last_total}, times) do
-    stones
-    |> Enum.reduce(%{count: last_total, stones: []}, fn stone, %{count: count, stones: acc} ->
-      result = evaluate_int_rule(stone)
-
-      if is_list(result) do
-        %{count: count + 1, stones: result ++ acc}
-      else
-        %{count: count, stones: [result | acc]}
-      end
+    original_stones
+    |> Enum.reduce(0, fn stone, sum ->
+      sum + cond_iterate(stone, num_times)
     end)
-    |> blink(times - 1)
   end
 
-  defp evaluate_int_rule(0), do: 1
-  defp evaluate_int_rule(1), do: 2024
+  def cond_iterate(stones, num_times) do
+    # require IEx
+    # IEx.pry()
 
-  defp evaluate_int_rule(stone) do
+    cond do
+      is_list(stones) and num_times == 0 ->
+        2
+
+      num_times == 0 ->
+        1
+
+      is_list(stones) ->
+        stones
+        |> Enum.reduce(0, fn stone, acc ->
+          # Task.async(fn ->
+          acc + cond_iterate(evaluate_int_rule(stone), num_times - 1)
+          # end)
+        end)
+
+      true ->
+        cond_iterate(evaluate_int_rule(stones), num_times - 1)
+    end
+  end
+
+  # Accounts for having started
+  def iterate(stones, 0, total) when is_list(stones), do: total + 2
+  def iterate(_, 0, total), do: total
+
+  def iterate(stones, num_times, total) when is_list(stones) do
+    if num_times == 4 do
+      # require IEx
+      # IEx.pry()
+    end
+
+    stones
+    |> Enum.reduce(0, fn stone, acc ->
+      # Task.async(fn ->
+      acc + iterate(evaluate_int_rule(stone), num_times - 1, total + 1)
+      # end)
+    end)
+
+    # |> Task.await_many(300_000)
+    # |> Enum.sum()
+  end
+
+  def iterate(stone, num_times, total) do
+    iterate(evaluate_int_rule(stone), num_times - 1, total)
+  end
+
+  def evaluate_int_rule(0), do: 1
+  def evaluate_int_rule(1), do: 2024
+
+  def evaluate_int_rule(stone) do
     log = :math.log10(stone)
     log_ceil = ceil(log)
 
@@ -58,24 +94,24 @@ defmodule AdventOfCode.Day11 do
 
     if rem(num_digits, 2) == 0 do
       half = trunc(:math.pow(10, num_digits / 2))
-      [rem(stone, half), div(stone, half)]
+      [div(stone, half), rem(stone, half)]
     else
       stone * 2024
     end
   end
 
-  defp evaluate_rules(stone, memory) when is_map_key(memory, stone),
+  def evaluate_rules(stone, memory) when is_map_key(memory, stone),
     do: {Map.get(memory, stone), memory}
 
-  defp evaluate_rules(stone, memory) do
+  def evaluate_rules(stone, memory) do
     val = evaluate_rules(stone)
 
     {val, Map.put(memory, stone, val)}
   end
 
-  defp evaluate_rules("0"), do: "1"
+  def evaluate_rules("0"), do: "1"
 
-  defp evaluate_rules(stone) when rem(byte_size(stone), 2) == 0 do
+  def evaluate_rules(stone) when rem(byte_size(stone), 2) == 0 do
     half_size = div(byte_size(stone), 2)
 
     first_half = binary_part(stone, 0, half_size)
@@ -86,7 +122,7 @@ defmodule AdventOfCode.Day11 do
     [first_half, second_half]
   end
 
-  defp evaluate_rules(stone) do
+  def evaluate_rules(stone) do
     stone = String.to_integer(stone)
 
     stone = stone * 2024

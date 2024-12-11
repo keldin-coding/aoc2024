@@ -7,7 +7,7 @@ defmodule AdventOfCode.Day11Test do
   @tag timeout: :infinity
   test "part1" do
     input = "125 17"
-    result = part1(input)
+    result = with_integers(input, 6)
 
     assert 55312 == result
   end

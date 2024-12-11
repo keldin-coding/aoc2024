@@ -3,18 +3,19 @@ defmodule AdventOfCode.Day11Test do
 
   import AdventOfCode.Day11
 
-  @tag :skip
+  @tag :day11
+  @tag timeout: :infinity
   test "part1" do
-    input = nil
+    input = "125 17"
     result = part1(input)
 
-    assert result
+    assert 55312 == result
   end
 
   @tag :skip
   test "part2" do
-    input = nil
-    result = part2(input)
+    input = "125 17"
+    result = part1(input, 75)
 
     assert result
   end

@@ -32,16 +32,30 @@ defmodule AdventOfCode.Day09 do
       |> Enum.flat_map(fn {val, how_many} -> List.duplicate(val, how_many) end)
       |> :array.from_list()
 
-    fileblocks_with_data = fileblocks |> Enum.filter(fn {v, _} -> v != -1 end) |> Enum.reverse()
+    fileblocks_with_data = fileblocks |> Enum.filter(fn {v, _} -> v != -1 end)
+
+    indexed_data =
+      Enum.reduce(
+        fileblocks_with_data,
+        %{list: [], previous: 0},
+        fn {val, size}, %{list: list, previous: previous} ->
+          index = index_for(complete_dataset, val, previous)
+
+          %{
+            list: [{val, size, index} | list],
+            previous: index + size
+          }
+        end
+      )
+
+    fileblocks_with_data = indexed_data[:list]
 
     defragment_in_chunks(fileblocks_with_data, complete_dataset)
   end
 
   defp defragment_in_chunks([], complete_dataset), do: :array.to_list(complete_dataset)
 
-  defp defragment_in_chunks([{value, size} | rest], dataset) do
-    value_index = index_for(dataset, value)
-
+  defp defragment_in_chunks([{value, size, value_index} | rest], dataset) do
     empty_slot = space_for(dataset, size, value_index, 0, nil)
 
     if empty_slot do
@@ -63,8 +77,8 @@ defmodule AdventOfCode.Day09 do
     replace_with(dataset, value, index + 1, num - 1)
   end
 
-  defp index_for(ary, search) do
-    0..(:array.size(ary) - 1)
+  defp index_for(ary, search, start) do
+    start..(:array.size(ary) - 1)
     |> Enum.find(fn i -> :array.get(i, ary) == search end)
   end
 

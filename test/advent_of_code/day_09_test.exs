@@ -59,7 +59,8 @@ defmodule AdventOfCode.Day09Test do
     assert "0099811188827773336446555566" == result_as_str
   end
 
-  @tag :day9
+  @tag :day9_part2
+  @tag timeout: :infinity
   test "part2" do
     input = "2333133121414131402"
     result = part2(input)

@@ -15,8 +15,6 @@ defmodule AdventOfCode.Day09 do
     |> split_input()
     |> create_fileblock_chunks()
     |> defragment_in_chunks()
-    |> Enum.flat_map(fn {val, how_many} -> List.duplicate(val, how_many) end)
-    |> IO.inspect()
     |> Enum.with_index()
     |> Enum.reduce(0, fn {val, index}, acc -> if val == -1, do: acc, else: acc + val * index end)
   end
@@ -28,57 +26,66 @@ defmodule AdventOfCode.Day09 do
     |> Enum.reverse()
   end
 
-  defp defragment_in_chunks(filemap_counts) do
-    # filemap = :array.from_list(filemap_counts)
+  defp defragment_in_chunks(fileblocks) do
+    complete_dataset =
+      fileblocks
+      |> Enum.flat_map(fn {val, how_many} -> List.duplicate(val, how_many) end)
+      |> :array.from_list()
 
-    defragment_in_chunks(
-      # We can just exclude free slots from this data
-      Enum.reverse(filemap_counts) |> Enum.filter(fn {v, _} -> v != -1 end),
-      :array.from_list(filemap_counts)
-    )
-    |> :array.to_list()
+    fileblocks_with_data = fileblocks |> Enum.filter(fn {v, _} -> v != -1 end) |> Enum.reverse()
+
+    defragment_in_chunks(fileblocks_with_data, complete_dataset)
   end
 
-  # Should be []
-  defp defragment_in_chunks(_, defragmented_filemap), do: defragmented_filemap
+  defp defragment_in_chunks([], complete_dataset), do: :array.to_list(complete_dataset)
 
-  defp defragment_in_chunks([{to_move_id, how_big_is_file} | rest], defragged) do
-    current_slot =
-      find_given_id(defragged, how_big_is_file, to_move_id, :array.size(defragged) - 1)
+  defp defragment_in_chunks([{value, size} | rest], dataset) do
+    value_index = index_for(dataset, value)
 
-    valid_slot = find_given_id(defragged, how_big_is_file, -1, current_slot)
+    empty_slot = space_for(dataset, size, value_index, 0, nil)
 
-    if !valid_slot do
-      defragment_in_chunks(rest, defragged)
+    if empty_slot do
+      dataset =
+        dataset
+        |> replace_with(value, empty_slot, size)
+        |> replace_with(-1, value_index, size)
+
+      defragment_in_chunks(rest, dataset)
     else
-      defragged = move_data(defragged, valid_slot, current_slot)
-
-      defragment_in_chunks(rest, defragged)
+      defragment_in_chunks(rest, dataset)
     end
   end
 
-  defp move_data(defragged, index_to_replace, index_to_move) do
-    # r_index = index_to_move + 1
-    # l_index = index_to_move - 1
+  defp replace_with(dataset, _, _, 0), do: dataset
 
-    # {l_data, l_size} = :array.get(l_index, defragged)
-
-    # defragged = if l_data == -1 do
-
-    # else
-    #   defragged
-    # end
+  defp replace_with(dataset, value, index, num) do
+    dataset = :array.set(index, value, dataset)
+    replace_with(dataset, value, index + 1, num - 1)
   end
 
-  defp find_given_id(_, _, _, before_index) when before_index == 0, do: nil
+  defp index_for(ary, search) do
+    0..(:array.size(ary) - 1)
+    |> Enum.find(fn i -> :array.get(i, ary) == search end)
+  end
 
-  # this is the worst named function on earth
-  defp find_given_id(defragged, goal_size, given_id, before_index) do
-    Enum.find(0..(before_index - 1), fn i ->
-      {id, size} = :array.get(i, defragged)
+  defp space_for(ary, min_size, be_before, current_index, found_index) do
+    val = :array.get(current_index, ary)
 
-      id == given_id and size >= goal_size
-    end)
+    cond do
+      !is_nil(found_index) and current_index - found_index == min_size ->
+        found_index
+
+      be_before == current_index or val == :undefined ->
+        nil
+
+      val == -1 ->
+        found_index = found_index || current_index
+
+        space_for(ary, min_size, be_before, current_index + 1, found_index)
+
+      val != -1 ->
+        space_for(ary, min_size, be_before, current_index + 1, nil)
+    end
   end
 
   def defragment(fileblock_data) do
@@ -156,7 +163,7 @@ defmodule AdventOfCode.Day09 do
   end
 
   defp create_fileblock_chunks([{current_num, _} | rest], :free, acc) do
-    create_fileblock_chunks(rest, :free, [{-1, current_num} | acc])
+    create_fileblock_chunks(rest, :file, [{-1, current_num} | acc])
   end
 
   def split_input(input) do

@@ -12,20 +12,18 @@ defmodule AdventOfCode.Day10 do
       end)
     end)
     |> Task.await_many()
-    |> Enum.reduce(0, fn set, sum -> sum + MapSet.size(set) end)
+    |> Enum.map(&Enum.uniq/1)
+    |> Enum.reduce(0, fn set, sum -> sum + length(set) end)
   end
 
   def part2(_args) do
   end
 
   defp paths_to_peaks(grid, start) do
-    acc = MapSet.new()
-
-    acc
-    |> MapSet.union(paths_to_peaks(grid, move_up(start), 0, acc))
-    |> MapSet.union(paths_to_peaks(grid, move_right(start), 0, acc))
-    |> MapSet.union(paths_to_peaks(grid, move_down(start), 0, acc))
-    |> MapSet.union(paths_to_peaks(grid, move_left(start), 0, acc))
+    paths_to_peaks(grid, move_up(start), 0, [])
+    |> Enum.concat(paths_to_peaks(grid, move_right(start), 0, []))
+    |> Enum.concat(paths_to_peaks(grid, move_down(start), 0, []))
+    |> Enum.concat(paths_to_peaks(grid, move_left(start), 0, []))
   end
 
   # Walked off the edge, return what we have
@@ -37,15 +35,15 @@ defmodule AdventOfCode.Day10 do
     cond do
       # We've reached a peak
       value == previous_value + 1 and value == 9 ->
-        MapSet.put(acc, position)
+        [position | acc]
 
       # We moved up by one at least
       value == previous_value + 1 ->
         acc
-        |> MapSet.union(paths_to_peaks(grid, move_up(position), value, acc))
-        |> MapSet.union(paths_to_peaks(grid, move_right(position), value, acc))
-        |> MapSet.union(paths_to_peaks(grid, move_down(position), value, acc))
-        |> MapSet.union(paths_to_peaks(grid, move_left(position), value, acc))
+        |> Enum.concat(paths_to_peaks(grid, move_up(position), value, acc))
+        |> Enum.concat(paths_to_peaks(grid, move_right(position), value, acc))
+        |> Enum.concat(paths_to_peaks(grid, move_down(position), value, acc))
+        |> Enum.concat(paths_to_peaks(grid, move_left(position), value, acc))
 
       true ->
         acc

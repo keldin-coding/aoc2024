@@ -19,13 +19,6 @@ defmodule AdventOfCode.Day09 do
     |> Enum.reduce(0, fn {val, index}, acc -> if val == -1, do: acc, else: acc + val * index end)
   end
 
-  defp inspect_end_of_list(list) do
-    list
-    |> Enum.reverse()
-    |> IO.inspect()
-    |> Enum.reverse()
-  end
-
   defp defragment_in_chunks(fileblocks) do
     complete_dataset =
       fileblocks

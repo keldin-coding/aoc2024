@@ -16,7 +16,18 @@ defmodule AdventOfCode.Day10 do
     |> Enum.reduce(0, fn set, sum -> sum + length(set) end)
   end
 
-  def part2(_args) do
+  def part2(input) do
+    grid = gridify_input(input)
+    trailheads = find_trailheads(grid)
+
+    trailheads
+    |> Enum.map(fn trailhead ->
+      Task.async(fn ->
+        paths_to_peaks(grid, trailhead)
+      end)
+    end)
+    |> Task.await_many()
+    |> Enum.reduce(0, fn set, sum -> sum + length(set) end)
   end
 
   defp paths_to_peaks(grid, start) do

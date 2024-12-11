@@ -39,7 +39,7 @@ defmodule AdventOfCode.Day10Test do
     9876
     """
 
-    assert 4 == part1(input)
+    assert 16 == part2(input)
 
     input = """
     89010123
@@ -52,7 +52,7 @@ defmodule AdventOfCode.Day10Test do
     10456732
     """
 
-    result = part1(input)
+    result = part2(input)
 
     assert 81 == result
   end
